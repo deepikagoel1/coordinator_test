@@ -36,14 +36,12 @@ def app():
                         state.stateName, districts.Districts_name
                         from appmela.student_registration
                         left outer join establishment on student_registration.district = establishment.district
-                        inner join state on state.stateName = student_registration.state
+                        right join state on state.stateName = student_registration.state
                         inner join districts on districts.Districts_name = student_registration.district
-                        group by districts.Districts_name;'''
-                            ,multi = True):
+                        group by districts.Districts_name;'''):
                 if record.with_rows: 
                     record = cursor.fetchall()
-                    df = pd.DataFrame(record, columns =['tot_stud', 'tot_est', 'state', 'district'
-                                                ])
+                    df = pd.DataFrame(record, columns = ['tot_stud', 'tot_est', 'state', 'district'])
             # df = df.drop_duplicates(['email'])
                     df.sort_values(by=['state', 'district'], ascending=True)
             # df = df.loc[(df['district'] != 'Select District')]

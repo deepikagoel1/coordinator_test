@@ -19,7 +19,7 @@ This multi-page app is using the streamlit-multiapps framework.
 """)
 
 # Add all your application here
-app.add_app("Home", home.app)
+# app.add_app("Home", home.app)
 app.add_app("Coordinator", coor.app)
 
 app.run()
