@@ -15,7 +15,7 @@ RUN pip install -r requirements.txt
 
 ENTRYPOINT ["streamlit", "run"]
 
-CMD ["app.py"]
+CMD ["home.py"]
 
 # WORKDIR .
 
