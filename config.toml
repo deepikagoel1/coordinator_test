@@ -3,3 +3,5 @@ maxUploadSize = 100000
 
 [server]
 enableCORS = false
+
+serverAddress = 127.0.0.1

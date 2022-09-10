@@ -11,7 +11,7 @@ st.set_page_config(
 
 app = MultiApp()
 
-st.markdown("""
+st.sidebar.markdown("""
 # Multi-Page App
 
 This multi-page app is using the streamlit-multiapps framework.
@@ -19,7 +19,7 @@ This multi-page app is using the streamlit-multiapps framework.
 """)
 
 # Add all your application here
-# app.add_app("Home", home.app)
-app.add_app("Coordinator", coor.app)
+app.add_app("Home", home.app)
+# app.add_app("Coordinator", coor.app)
 
 app.run()

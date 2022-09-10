@@ -36,17 +36,31 @@ try:
         print("Connected to MySQL Server version ", db_Info)
         cursor = connection.cursor()
 
-        operation = 'SELECT count(id) from student_registration; SELECT count(id) from establishment; SELECT stateName from stateName; SELECT Districts_name from districts;'
+        operation = """select count(id) from student_registration; select count(id) from establishment; select stateName from state; select Districts_name from districts;"""
+        
+        
+        
+        
+        # connection.commit()
 
         for result in cursor.execute(operation, multi=True):
+            
             if result.with_rows:
-                record = cursor.fetchall()
-            df = pd.DataFrame(record, columns=['tot_stud', 'tot_est', 'state', 'district'
-                                           ])
+                        print("Rows produced by statement '{}':".format(
+                            result.statement))
+                        
+                        df =  pd.DataFrame(result.fetchall())
+                        df.columns = result.keys()
+                        print(df)
+                        # record = pd.read_sql(result.fetchall(),connection)
+                        # print(record, connection)
+            #     record = cursor.fetchall()
+            # df = pd.DataFrame(record, columns=['tot_stud', 'tot_est', 'state', 'district'
+            #                                ])
         # df = df.drop_duplicates(['email'])
-            df.sort_values(by=['state', 'district'], ascending=True)
+            # df.sort_values(by=['state', 'district'], ascending=True)
 
-        print(df)
+        # print(df)
 
 except Error as e:
     print("Error while connecting to MySQL", e)

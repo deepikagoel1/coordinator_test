@@ -5,7 +5,6 @@ import sqlite3
 import streamlit as st
 # import pandas as pd
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
-import toml
 def app():
 # @st.cache
    
@@ -31,17 +30,67 @@ def app():
             # sql = "select appmela.candidate.name, appmela.candidate.email, appmela.candidate.gender, from appmela.candidate,
             #         join
             #         "
-            for record in cursor.execute('''select 
-                        count(student_registration.id), count(establishment.id),
-                        state.stateName, districts.Districts_name
-                        from appmela.student_registration
-                        left outer join establishment on student_registration.district = establishment.district
-                        right join state on state.stateName = student_registration.state
-                        inner join districts on districts.Districts_name = student_registration.district
-                        group by districts.Districts_name;'''):
+            for record in cursor.execute('''
+                                         Select add_vacency.state_name , add_vacency.district , 
+                                         add_vacency.tradename ,  sum(add_vacency.vacency) as vacancy_counts, 
+                                            
+                                            count(company_name) as Number_of_Companies
+                                            from appmela.add_vacency 
+                                            group by district order by state_name;
+                                         '''
+                            ,multi = True):
                 if record.with_rows: 
                     record = cursor.fetchall()
-                    df = pd.DataFrame(record, columns = ['tot_stud', 'tot_est', 'state', 'district'])
+                    df = pd.DataFrame(record, columns =['state', 'district', 'Trades', 
+                                                        'Number of Vacancies',
+                                                        'Number of Companies',
+                                                        
+                                                ])
+            for record in cursor.execute('''
+                                         SELECT count(distinct(email)) as num
+                                         FROM appmela.candidate where district != '' group by district;
+                                         '''
+                            ,multi = True):
+                if record.with_rows: 
+                    record = cursor.fetchall()
+                    df['Number of Students'] = pd.DataFrame(record).reset_index(drop=True)
+                    
+            for record in cursor.execute('''
+                                         SELECT count(distinct(cemailid)) as num
+                                         FROM appmela.establishment where district != '' group by district;
+                                         '''
+                            ,multi = True):
+                if record.with_rows: 
+                    record = cursor.fetchall()
+                    df['Number of Establishhment'] = pd.DataFrame(record).reset_index(drop=True)
+                    
+            for record in cursor.execute('''
+                                         SELECT count(distinct(apprenticemelacenter)) as num
+                                         FROM appmela.vacancy_details1 group by DistrictName;
+                                         '''
+                            ,multi = True):
+                if record.with_rows: 
+                    record = cursor.fetchall()
+                    df['Number of ApprenticeMelacenter'] = pd.DataFrame(record).reset_index(drop=True)
+                    
+            
+            for record in cursor.execute('''
+                                         SELECT count(distinct(email)) as num
+                                         FROM appmela.candidate where district != '' group by district;
+                                         '''
+                            ,multi = True):
+                if record.with_rows: 
+                    record = cursor.fetchall()
+                    df['Number of Students'] = pd.DataFrame(record).reset_index(drop=True)
+                    
+            for record in cursor.execute('''
+                                         SELECT count(distinct(nEmail)) as num
+                                         FROM appmela.nodal where district != '' group by district;
+                                         '''
+                            ,multi = True):
+                if record.with_rows: 
+                    record = cursor.fetchall()
+                    df['Number of Coordinators'] = pd.DataFrame(record).reset_index(drop=True)
             # df = df.drop_duplicates(['email'])
                     df.sort_values(by=['state', 'district'], ascending=True)
             # df = df.loc[(df['district'] != 'Select District')]
@@ -152,11 +201,12 @@ def app():
                     )  
                         
             
-        tot_stud = int(df["tot_stud"].sum())
-        est = int(df['tot_est'].sum())
-        # tot_cord = int(df['tot_cord'].sum())
-        # tot_vcn = int(df['vacancy'].sum)
-            
+        tot_stud = int(df["Number of Vacancies"].sum())
+        est = int(df['Number of ApprenticeMelacenter'].sum())
+        tot_cord = int(df['Number of Establishhment'].sum())
+        tot_vcn = int(df['Number of Students'].sum())
+        tot_comp = int(df['Number of Companies'].sum())
+        tot_coord = int(df['Number of Coordinators'].sum())
         with cols[0]:
         
             wch_colour_box = (0,204,102)
@@ -164,9 +214,34 @@ def app():
             fontsize = 18
             valign = "left"
             iconname = "fas fa-asterisk"
-            sline = "Total Students"
+            sline = "Number of vacancies"
             # lnk = '<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.1/css/all.css" crossorigin="anonymous">'
             i = f"{tot_stud}"
+            htmlstr = f"""<p style='background-color: rgb({wch_colour_box[0]}, 
+                                                    {wch_colour_box[1]}, 
+                                                    {wch_colour_box[2]}, 0.75); 
+                                color: rgb({wch_colour_font[0]}, 
+                                        {wch_colour_font[1]}, 
+                                        {wch_colour_font[2]}, 0.75); 
+                                font-size: {fontsize}px; 
+                                border-radius: 7px; 
+                                padding-left: 12px; 
+                                padding-top: 18px; 
+                                padding-bottom: 18px; 
+                                line-height:25px;'>
+                                <i class='{iconname} fa-xs'></i> {i}
+                                </style><BR><span style='font-size: 14px; 
+                                margin-top: 0;'>{sline}</style></span></p>"""
+            st.markdown(htmlstr, unsafe_allow_html=True)
+            
+            wch_colour_box = (0,204,102)
+            wch_colour_font = (0,0,0)
+            fontsize = 18
+            valign = "left"
+            iconname = "fas fa-asterisk"
+            sline = "Number of Students"
+            # lnk = '<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.1/css/all.css" crossorigin="anonymous">'
+            i = f"{tot_vcn}"
             htmlstr = f"""<p style='background-color: rgb({wch_colour_box[0]}, 
                                                     {wch_colour_box[1]}, 
                                                     {wch_colour_box[2]}, 0.75); 
@@ -191,7 +266,7 @@ def app():
             fontsize = 18
             valign = "left"
             iconname = "fas fa-asterisk"
-            sline = "Total Establishments"
+            sline = "Number of ApprenticeMelacenter"
             # lnk = '<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.1/css/all.css" crossorigin="anonymous">'
             i = f"{est}"
             htmlstr = f"""<p style='background-color: rgb({wch_colour_box[0]}, 
@@ -211,37 +286,87 @@ def app():
                                 margin-top: 0;'>{sline}</style></span></p>"""
             st.markdown(htmlstr, unsafe_allow_html=True)
             
+            wch_colour_box = (0,204,102)
+            wch_colour_font = (0,0,0)
+            fontsize = 18
+            valign = "left"
+            iconname = "fas fa-asterisk"
+            sline = "Number of Companies"
+            # lnk = '<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.1/css/all.css" crossorigin="anonymous">'
+            i = f"{tot_comp}"
+            htmlstr = f"""<p style='background-color: rgb({wch_colour_box[0]}, 
+                                                    {wch_colour_box[1]}, 
+                                                    {wch_colour_box[2]}, 0.75); 
+                                color: rgb({wch_colour_font[0]}, 
+                                        {wch_colour_font[1]}, 
+                                        {wch_colour_font[2]}, 0.75); 
+                                font-size: {fontsize}px; 
+                                border-radius: 7px; 
+                                padding-left: 12px; 
+                                padding-top: 18px; 
+                                padding-bottom: 18px; 
+                                line-height:25px;'>
+                                <i class='{iconname} fa-xs'></i> {i}
+                                </style><BR><span style='font-size: 14px; 
+                                margin-top: 0;'>{sline}</style></span></p>"""
+            st.markdown(htmlstr, unsafe_allow_html=True)
             
-        # with cols[2]:
             
-        #     wch_colour_box = (0,204,102)
-        #     wch_colour_font = (0,0,0)
-        #     fontsize = 18
-        #     valign = "left"
-        #     iconname = "fas fa-asterisk"
-        #     sline = "Total Coordinators"
-        #     # lnk = '<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.1/css/all.css" crossorigin="anonymous">'
-        #     i = f"{tot_cord}"
-        #     htmlstr = f"""<p style='background-color: rgb({wch_colour_box[0]}, 
-        #                                               {wch_colour_box[1]}, 
-        #                                               {wch_colour_box[2]}, 0.75); 
-        #                         color: rgb({wch_colour_font[0]}, 
-        #                                    {wch_colour_font[1]}, 
-        #                                    {wch_colour_font[2]}, 0.75); 
-        #                         font-size: {fontsize}px; 
-        #                         border-radius: 7px; 
-        #                         padding-left: 12px; 
-        #                         padding-top: 18px; 
-        #                         padding-bottom: 18px; 
-        #                         line-height:25px;'>
-        #                         <i class='{iconname} fa-xs'></i> {i}
-        #                         </style><BR><span style='font-size: 14px; 
-        #                         margin-top: 0;'>{sline}</style></span></p>"""
-        #     st.markdown(htmlstr, unsafe_allow_html=True)
+        with cols[2]:
+            
+            wch_colour_box = (0,204,102)
+            wch_colour_font = (0,0,0)
+            fontsize = 18
+            valign = "left"
+            iconname = "fas fa-asterisk"
+            sline = "Number of Establishhment"
+            # lnk = '<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.1/css/all.css" crossorigin="anonymous">'
+            i = f"{tot_cord}"
+            htmlstr = f"""<p style='background-color: rgb({wch_colour_box[0]}, 
+                                                      {wch_colour_box[1]}, 
+                                                      {wch_colour_box[2]}, 0.75); 
+                                color: rgb({wch_colour_font[0]}, 
+                                           {wch_colour_font[1]}, 
+                                           {wch_colour_font[2]}, 0.75); 
+                                font-size: {fontsize}px; 
+                                border-radius: 7px; 
+                                padding-left: 12px; 
+                                padding-top: 18px; 
+                                padding-bottom: 18px; 
+                                line-height:25px;'>
+                                <i class='{iconname} fa-xs'></i> {i}
+                                </style><BR><span style='font-size: 14px; 
+                                margin-top: 0;'>{sline}</style></span></p>"""
+            st.markdown(htmlstr, unsafe_allow_html=True)
+            
+            wch_colour_box = (0,204,102)
+            wch_colour_font = (0,0,0)
+            fontsize = 18
+            valign = "left"
+            iconname = "fas fa-asterisk"
+            sline = "Number of Coordinators"
+            # lnk = '<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.1/css/all.css" crossorigin="anonymous">'
+            i = f"{tot_coord}"
+            htmlstr = f"""<p style='background-color: rgb({wch_colour_box[0]}, 
+                                                      {wch_colour_box[1]}, 
+                                                      {wch_colour_box[2]}, 0.75); 
+                                color: rgb({wch_colour_font[0]}, 
+                                           {wch_colour_font[1]}, 
+                                           {wch_colour_font[2]}, 0.75); 
+                                font-size: {fontsize}px; 
+                                border-radius: 7px; 
+                                padding-left: 12px; 
+                                padding-top: 18px; 
+                                padding-bottom: 18px; 
+                                line-height:25px;'>
+                                <i class='{iconname} fa-xs'></i> {i}
+                                </style><BR><span style='font-size: 14px; 
+                                margin-top: 0;'>{sline}</style></span></p>"""
+            st.markdown(htmlstr, unsafe_allow_html=True)
                 
         
         def convert_df(df):
-            return df.to_csv().encode('utf-8')
+            return df.to_csv(index = False).encode('utf-8')
         csv = convert_df(df)
         st.download_button(
             "Press to Download",
@@ -259,3 +384,5 @@ def app():
     #     connection.close()
                 
             # print("MySQL connection is closed")
+
+app.run()
