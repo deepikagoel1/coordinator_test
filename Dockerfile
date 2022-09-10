@@ -5,7 +5,7 @@ EXPOSE 8501
 
 RUN pip3 install streamlit
 
-COPY app.py app.py
+COPY home.py home.py
 
 
 # Upgrade pip and install requirements
